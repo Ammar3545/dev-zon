@@ -22,4 +22,4 @@ jobs:
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/dev-zone:latest .
 
       - name: Push Docker image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/dez-zone:latest
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/dev-zone:latest
