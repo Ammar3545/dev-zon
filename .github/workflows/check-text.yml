@@ -1,0 +1,60 @@
+name: Text File Checker
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-text:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show repository files
+        run: ls -la
+
+      - name: Check for forbidden words
+        run: |
+          if grep -Riq "secret" .; then
+            echo "❌ Forbidden word 'secret' found!"
+            exit 1
+          else
+            echo "✔️ No forbidden words found."
+          fi
+
+      - name: Count lines in all files
+        run: |
+          echo "Line count for all files:"
+          find . -type f \
+            ! -path "./.git/*" \
+            ! -path "./.github/workflows/*" \
+            -exec wc -l {} \;
+
+      - name: Fail if any file contains more than 100 words
+        run: |
+          echo "Checking all files for word count limit (max 100 words)..."
+
+          find . -type f \
+            ! -path "./.git/*" \
+            ! -path "./.github/workflows/*" \
+            | while read file; do
+
+              # Skip binary files (images, executables, etc.)
+              if file "$file" | grep -qiE 'binary|image|audio|video'; then
+                echo "Skipping binary file: $file"
+                continue
+              fi
+
+              WORDS=$(wc -w < "$file")
+              echo "File: $file → $WORDS words"
+
+              if [ "$WORDS" -gt 100 ]; then
+                echo "❌ Error: File '$file' contains more than 100 words ($WORDS words)."
+                exit 1
+              fi
+
+            done
+
+          echo "✔️ All files are within the 100-word limit."
